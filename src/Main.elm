@@ -1,17 +1,23 @@
 module Main exposing (..)
 
 import Browser
-import Element exposing (Element, column)
-import Element.Input as Input
+import Element as E exposing (Element, column, fill, height, htmlAttribute, layout, padding, spacing, text, width)
+import Element.Background as Background
+import Element.Font as Font
+import Element.Input as Input exposing (labelBelow)
+import FlatColors.FlatUIPalette as Palette
+import GeoCodeDecoders exposing (IpStackInfo)
+import Html.Attributes exposing (style)
 import Http
 
 
+main : Program () Model Msg
 main =
-    Browser.element
+    Browser.document
         { init = init
         , update = update
-        , subscriptions = subscriptions
         , view = view
+        , subscriptions = subscriptions
         }
 
 
@@ -45,21 +51,20 @@ init _ =
 
 
 type Msg
-    = LoadFile String
+    = FileNameChanged String
+    | LoadFile String
     | FileLoaded String
-    | GeocodeResult (Result Http.error GeoCode)
+    | GeocodeResult (Result Http.Error IpStackInfo)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotText result ->
-            case result of
-                Ok fullText ->
-                    ( Success fullText, Cmd.none )
+        FileNameChanged txt ->
+            ( { model | filename = txt }, Cmd.none )
 
-                Err _ ->
-                    ( Failure, Cmd.none )
+        _ ->
+            ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
@@ -67,8 +72,23 @@ subscriptions model =
     Sub.none
 
 
-view : Model -> Element Msg
 view model =
-    column []
-    [ Input.text model.filename
-    ]
+    { title = "Log file analyzer"
+    , body =
+        [ layout
+            [ Background.color Palette.wetAsphalt
+            , width fill
+            , height fill
+            , Font.color Palette.emerald
+            ]
+          <|
+            column [ spacing 10, padding 10 ]
+                [ Input.text []
+                    { onChange = FileNameChanged
+                    , text = model.filename
+                    , placeholder = Nothing
+                    , label = labelBelow [] (text ".CSV file name")
+                    }
+                ]
+        ]
+    }
