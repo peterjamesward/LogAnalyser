@@ -1,14 +1,17 @@
 module Main exposing (..)
 
 import Browser
-import Element as E exposing (Element, column, fill, height, htmlAttribute, layout, padding, spacing, text, width)
+import Element as E exposing (Element, clipY, column, fill, height, htmlAttribute, layout, padding, scrollbars, spacing, table, text, width)
 import Element.Background as Background
 import Element.Font as Font
-import Element.Input as Input exposing (labelBelow)
 import FlatColors.FlatUIPalette as Palette
-import GeoCodeDecoders exposing (IpStackInfo)
-import Html.Attributes exposing (style)
+import GeoCodeDecoders exposing (LogEntry, LogEntryWrapper, logEntriesDecoder)
 import Http
+import Url.Builder as Builder
+
+
+logAPI =
+    "https://nrltvlmqsa.execute-api.eu-west-1.amazonaws.com"
 
 
 main : Program () Model Msg
@@ -21,50 +24,39 @@ main =
         }
 
 
-type alias LogEntry =
-    { day : Int
-    , month : Int
-    , year : Int
-    , ip : String
-    }
-
-
 type alias Model =
-    { filename : String
-    , fileContent : String
-    , logEntries : List LogEntry
+    { logEntries : List LogEntry
     }
 
 
 initModel =
-    { filename = ""
-    , fileContent = ""
-    , logEntries = []
+    { logEntries = []
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( initModel
-    , Cmd.none
+    , requestLogs ReceivedLogs
     )
 
 
 type Msg
-    = FileNameChanged String
-    | LoadFile String
-    | FileLoaded String
-    | GeocodeResult (Result Http.Error IpStackInfo)
+    = ReceivedLogs (Result Http.Error (List LogEntryWrapper))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        FileNameChanged txt ->
-            ( { model | filename = txt }, Cmd.none )
+        ReceivedLogs response ->
+            case response of
+                Ok logs ->
+                    ( { model | logEntries = List.map .entry logs }
+                    , Cmd.none
+                    )
 
-        _ ->
-            ( model, Cmd.none )
+                Err _ ->
+                    ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
@@ -72,23 +64,46 @@ subscriptions model =
     Sub.none
 
 
+view : Model -> Browser.Document Msg
 view model =
     { title = "Log file analyzer"
     , body =
         [ layout
             [ Background.color Palette.wetAsphalt
             , width fill
-            , height fill
+            , height fill, clipY, scrollbars
             , Font.color Palette.emerald
             ]
           <|
-            column [ spacing 10, padding 10 ]
-                [ Input.text []
-                    { onChange = FileNameChanged
-                    , text = model.filename
-                    , placeholder = Nothing
-                    , label = labelBelow [] (text ".CSV file name")
-                    }
+            column [ spacing 10, padding 10, width fill ]
+                [ logTable model.logEntries
                 ]
         ]
     }
+
+
+requestLogs : (Result Http.Error (List LogEntryWrapper) -> msg) -> Cmd msg
+requestLogs msg =
+    Http.request
+        { method = "GET"
+        , headers = []
+        , url = Builder.crossOrigin logAPI [ "live" ] []
+        , body = Http.emptyBody
+        , expect = Http.expectJson msg logEntriesDecoder
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+logTable entries =
+    table [ width fill ]
+        { data = entries
+        , columns =
+            [ { header = text "Date", width = fill, view = .timestamp >> text }
+            , { header = text "I.P.", width = fill, view = .ip >> text }
+            , { header = text "City", width = fill, view = .city >> text }
+            , { header = text "Country", width = fill, view = .countryName >> text }
+            , { header = text "Longitude", width = fill, view = .longitude >> String.fromFloat >> text }
+            , { header = text "Latitude", width = fill, view = .latitude >> String.fromFloat >> text }
+            ]
+        }

@@ -3,9 +3,9 @@ module GeoCodeDecoders exposing (..)
 import Json.Decode as D exposing (Decoder)
 
 
-type alias IpStackInfo =
-    { ip : String
-    , continentName : String
+type alias LogEntry =
+    { timestamp : String
+    , ip : String
     , countryName : String
     , regionName : String
     , city : String
@@ -14,15 +14,30 @@ type alias IpStackInfo =
     , longitude : Float
     }
 
+type alias LogEntryWrapper =
+    { entry : LogEntry
+    }
 
-decodeSomething : Decoder IpStackInfo
-decodeSomething =
-    D.map8 IpStackInfo
+type alias LogEntries =
+    { logs : List LogEntry }
+
+logWrapperDecoder : Decoder LogEntryWrapper
+logWrapperDecoder =
+    D.map LogEntryWrapper
+        (D.at [ "entry"] logEntryDecoder)
+
+logEntryDecoder : Decoder LogEntry
+logEntryDecoder =
+    D.map8 LogEntry
+        (D.at [ "timestamp" ] D.string )
         (D.at [ "ip" ] D.string)
-        (D.at [ "continent_name" ] D.string)
-        (D.at [ "country_name" ] D.string)
-        (D.at [ "region_name" ] D.string)
+        (D.at [ "country" ] D.string)
+        (D.at [ "region" ] D.string)
         (D.at [ "city" ] D.string)
         (D.at [ "zip" ] D.string)
-        (D.at [ "latitude" ] D.float)
-        (D.at [ "longitude" ] D.float)
+        (D.at [ "lat" ] D.float)
+        (D.at [ "lon" ] D.float)
+
+logEntriesDecoder : Decoder (List LogEntryWrapper)
+logEntriesDecoder =
+    D.at [ "logs" ] (D.list logWrapperDecoder)
