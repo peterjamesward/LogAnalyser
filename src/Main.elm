@@ -1,12 +1,13 @@
 module Main exposing (..)
 
 import Browser
-import Element as E exposing (Element, clipY, column, fill, height, htmlAttribute, layout, padding, scrollbars, spacing, table, text, width)
+import Element as E exposing (Element, centerX, centerY, clipY, column, el, fill, height, htmlAttribute, layout, padding, scrollbars, spacing, table, text, width)
 import Element.Background as Background
 import Element.Font as Font
 import FlatColors.FlatUIPalette as Palette
 import GeoCodeDecoders exposing (LogEntry, LogEntryWrapper, logEntriesDecoder)
 import Http
+import Pivot exposing (makePivotTable)
 import Url.Builder as Builder
 
 
@@ -71,12 +72,15 @@ view model =
         [ layout
             [ Background.color Palette.wetAsphalt
             , width fill
-            , height fill, clipY, scrollbars
+            , height fill
+            , clipY
+            , scrollbars
             , Font.color Palette.emerald
             ]
           <|
-            column [ spacing 10, padding 10, width fill ]
-                [ logTable model.logEntries
+            column [ spacing 10, padding 10, width fill, centerX, centerY ]
+                [ --logTable model.logEntries
+                  el [centerX] (makePivotTable model.logEntries)
                 ]
         ]
     }
