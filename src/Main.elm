@@ -1,10 +1,10 @@
 module Main exposing (..)
 
 import Browser
-import Element as E exposing (Element, centerX, centerY, clipY, column, el, fill, height, htmlAttribute, layout, padding, scrollbars, spacing, table, text, width)
+import Element as E exposing (Element, alignTop, centerX, centerY, clipY, column, el, fill, height, htmlAttribute, layout, padding, scrollbars, spacing, table, text, width)
 import Element.Background as Background
 import Element.Font as Font
-import FlatColors.FlatUIPalette as Palette
+import FlatColors.FlatUIPalette as Palette exposing (clouds)
 import GeoCodeDecoders exposing (LogEntry, LogEntryWrapper, logEntriesDecoder)
 import Http
 import Pivot exposing (makePivotTable)
@@ -78,9 +78,10 @@ view model =
             , Font.color Palette.emerald
             ]
           <|
-            column [ spacing 10, padding 10, width fill, centerX, centerY ]
-                [ --logTable model.logEntries
-                  el [centerX] (makePivotTable model.logEntries)
+            column [ spacing 10, padding 10, width fill, centerX ]
+                [ el [ centerX, alignTop, Font.size 32, Font.color clouds ] <|
+                    text "Page loads by day by country"
+                , el [ centerX, centerY ] (makePivotTable model.logEntries)
                 ]
         ]
     }
