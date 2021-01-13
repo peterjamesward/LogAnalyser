@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Element as E exposing (Element, alignTop, centerX, centerY, clipY, column, el, fill, height, htmlAttribute, layout, padding, row, scrollbars, shrink, spacing, table, text, width, wrappedRow)
+import Element as E exposing (Element, alignTop, centerX, centerY, clipY, column, el, fill, height, htmlAttribute, layout, padding, px, row, scrollbars, shrink, spacing, table, text, width, wrappedRow)
 import Element.Background as Background
 import Element.Font as Font
 import FlatColors.FlatUIPalette as Palette exposing (clouds)
@@ -79,7 +79,7 @@ view model =
             , Font.color Palette.emerald
             ]
           <|
-            column [ spacing 10, padding 10, centerX ]
+            column [ spacing 10, padding 10, centerX, width shrink ]
                 [ el [ centerX, alignTop, Font.size 32, Font.color clouds ] <|
                     text "Summary by day"
                 , summaryTable <| summarise model.logEntries
@@ -120,11 +120,11 @@ summaryTable summary =
     table [ padding 10, spacing 10 ]
         { data = summary
         , columns =
-            [ { header = showString "Date", width = fill, view = .date >> showString }
-            , { header = showString "Page loads", width = fill, view = .countPageLoads >> showInt }
-            , { header = showString "Unique IP", width = fill, view = .countIPs >> showInt }
-            , { header = showString "Countries", width = fill, view = .countCountries >> showInt }
-            , { header = showString "Countries", width = fill, view = .countries >> listCountries }
+            [ { header = showString "Date", width = shrink, view = .date >> showString }
+            , { header = showString "Page loads", width = shrink, view = .countPageLoads >> showInt }
+            , { header = showString "Unique IP", width = shrink, view = .countIPs >> showInt }
+            --, { header = showString "Countries", width = fill, view = .countCountries >> showInt }
+            , { header = showString "Country list", width = px 300, view = .countries >> listCountries }
             ]
         }
 
@@ -141,10 +141,10 @@ showInt i =
 
 listCountries : List ( String, Int ) -> Element Msg
 listCountries countries =
-    wrappedRow [ width fill, padding 5, spacing 10, centerY ]
+    wrappedRow [ width fill, padding 5, spacing 2, centerY ]
         (List.map showCountry countries)
 
 
 showCountry : ( String, Int ) -> Element Msg
 showCountry ( name, count ) =
-    row [] [ showString name, showInt count ]
+    row [] [ showString name, text "(", showInt count, text ")" ]

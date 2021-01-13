@@ -19,9 +19,15 @@ summarise entries =
         logsByDate =
             List.Extra.gatherEqualsBy .timestamp entries
 
+        uniqueIPsCount =
+            List.length << List.Extra.uniqueBy .ip
+
+        uniqueCountryCount =
+            List.length << List.Extra.uniqueBy .countryName
+
         countForCountry : (LogEntry, List LogEntry) -> (String, Int)
         countForCountry ( leader, rest ) =
-            (leader.countryName, 1 + List.length rest)
+            (leader.countryName, uniqueIPsCount (leader :: rest))
 
         summariseCountries : List LogEntry -> List (String, Int)
         summariseCountries  =
@@ -32,8 +38,8 @@ summarise entries =
         summariseDate ( leader, rest ) =
             { date = leader.timestamp
             , countPageLoads = 1 + List.length rest
-            , countIPs = List.length <| List.Extra.uniqueBy .ip (leader :: rest)
-            , countCountries = List.length <| List.Extra.uniqueBy .countryName (leader :: rest)
+            , countIPs = uniqueIPsCount (leader :: rest)
+            , countCountries = uniqueCountryCount (leader :: rest)
             , countries = summariseCountries (leader :: rest)
             }
     in
